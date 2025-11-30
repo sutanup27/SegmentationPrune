@@ -1,0 +1,241 @@
+conv1.weight torch.Size([64, 3, 3, 3])
+bn1.weight torch.Size([64])
+bn1.bias torch.Size([64])
+layer1.0.conv1.weight torch.Size([64, 64, 3, 3])
+layer1.0.bn1.weight torch.Size([64])
+layer1.0.bn1.bias torch.Size([64])
+layer1.0.conv2.weight torch.Size([64, 64, 3, 3])
+layer1.0.bn2.weight torch.Size([64])
+layer1.0.bn2.bias torch.Size([64])
+layer1.1.conv1.weight torch.Size([64, 64, 3, 3])
+layer1.1.bn1.weight torch.Size([64])
+layer1.1.bn1.bias torch.Size([64])
+layer1.1.conv2.weight torch.Size([64, 64, 3, 3])
+layer1.1.bn2.weight torch.Size([64])
+layer1.1.bn2.bias torch.Size([64])
+layer2.0.conv1.weight torch.Size([128, 64, 3, 3])
+layer2.0.bn1.weight torch.Size([128])
+layer2.0.bn1.bias torch.Size([128])
+layer2.0.conv2.weight torch.Size([128, 128, 3, 3])
+layer2.0.bn2.weight torch.Size([128])
+layer2.0.bn2.bias torch.Size([128])
+layer2.0.shortcut.0.weight torch.Size([128, 64, 1, 1])
+layer2.0.shortcut.1.weight torch.Size([128])
+layer2.0.shortcut.1.bias torch.Size([128])
+layer2.1.conv1.weight torch.Size([128, 128, 3, 3])
+layer2.1.bn1.weight torch.Size([128])
+layer2.1.bn1.bias torch.Size([128])
+layer2.1.conv2.weight torch.Size([128, 128, 3, 3])
+layer2.1.bn2.weight torch.Size([128])
+layer2.1.bn2.bias torch.Size([128])
+layer3.0.conv1.weight torch.Size([256, 128, 3, 3])
+layer3.0.bn1.weight torch.Size([256])
+layer3.0.bn1.bias torch.Size([256])
+layer3.0.conv2.weight torch.Size([256, 256, 3, 3])
+layer3.0.bn2.weight torch.Size([256])
+layer3.0.bn2.bias torch.Size([256])
+layer3.0.shortcut.0.weight torch.Size([256, 128, 1, 1])
+layer3.0.shortcut.1.weight torch.Size([256])
+layer3.0.shortcut.1.bias torch.Size([256])
+layer3.1.conv1.weight torch.Size([256, 256, 3, 3])
+layer3.1.bn1.weight torch.Size([256])
+layer3.1.bn1.bias torch.Size([256])
+layer3.1.conv2.weight torch.Size([256, 256, 3, 3])
+layer3.1.bn2.weight torch.Size([256])
+layer3.1.bn2.bias torch.Size([256])
+layer4.0.conv1.weight torch.Size([512, 256, 3, 3])
+layer4.0.bn1.weight torch.Size([512])
+layer4.0.bn1.bias torch.Size([512])
+layer4.0.conv2.weight torch.Size([512, 512, 3, 3])
+layer4.0.bn2.weight torch.Size([512])
+layer4.0.bn2.bias torch.Size([512])
+layer4.0.shortcut.0.weight torch.Size([512, 256, 1, 1])
+layer4.0.shortcut.1.weight torch.Size([512])
+layer4.0.shortcut.1.bias torch.Size([512])
+layer4.1.conv1.weight torch.Size([512, 512, 3, 3])
+layer4.1.bn1.weight torch.Size([512])
+layer4.1.bn1.bias torch.Size([512])
+layer4.1.conv2.weight torch.Size([512, 512, 3, 3])
+layer4.1.bn2.weight torch.Size([512])
+layer4.1.bn2.bias torch.Size([512])
+fc.weight torch.Size([10, 512])
+fc.bias torch.Size([10])
+accuracy: 95.54000091552734                                                                                
+macs: 556037632
+sparsity: 0.0
+model size:42.63MB
+Precision: 0.9553, Recall: 0.9554, F1: 0.9553
+[[955   2  12   1   1   0   2   1  20   6]
+ [  2 983   0   0   1   0   0   0   2  12]
+ [ 11   0 935  12  12  10  16   3   1   0]
+ [  6   1   9 900  11  51  10   4   6   2]
+ [  2   0   5  11 963   9   4   6   0   0]
+ [  5   1   6  41  11 925   3   7   1   0]
+ [  4   0   3  12   1   1 977   2   0   0]
+ [  1   0   1   4   8   4   0 981   0   1]
+ [ 15   9   2   1   0   0   0   0 967   6]
+ [  3  19   0   3   0   1   0   0   6 968]]
+CPU latency: 0.012154793739318848
+GPU latency: 0.0017903804779052734
+
+FGP:
+conv1.weight torch.Size([64, 3, 3, 3])
+bn1.weight torch.Size([64])
+bn1.bias torch.Size([64])
+layer1.0.conv1.weight torch.Size([64, 64, 3, 3])
+layer1.0.bn1.weight torch.Size([64])
+layer1.0.bn1.bias torch.Size([64])
+layer1.0.conv2.weight torch.Size([64, 64, 3, 3])
+layer1.0.bn2.weight torch.Size([64])
+layer1.0.bn2.bias torch.Size([64])
+layer1.1.conv1.weight torch.Size([64, 64, 3, 3])
+layer1.1.bn1.weight torch.Size([64])
+layer1.1.bn1.bias torch.Size([64])
+layer1.1.conv2.weight torch.Size([64, 64, 3, 3])
+layer1.1.bn2.weight torch.Size([64])
+layer1.1.bn2.bias torch.Size([64])
+layer2.0.conv1.weight torch.Size([128, 64, 3, 3])
+layer2.0.bn1.weight torch.Size([128])
+layer2.0.bn1.bias torch.Size([128])
+layer2.0.conv2.weight torch.Size([128, 128, 3, 3])
+layer2.0.bn2.weight torch.Size([128])
+layer2.0.bn2.bias torch.Size([128])
+layer2.0.shortcut.0.weight torch.Size([128, 64, 1, 1])
+layer2.0.shortcut.1.weight torch.Size([128])
+layer2.0.shortcut.1.bias torch.Size([128])
+layer2.1.conv1.weight torch.Size([128, 128, 3, 3])
+layer2.1.bn1.weight torch.Size([128])
+layer2.1.bn1.bias torch.Size([128])
+layer2.1.conv2.weight torch.Size([128, 128, 3, 3])
+layer2.1.bn2.weight torch.Size([128])
+layer2.1.bn2.bias torch.Size([128])
+layer3.0.conv1.weight torch.Size([256, 128, 3, 3])
+layer3.0.bn1.weight torch.Size([256])
+layer3.0.bn1.bias torch.Size([256])
+layer3.0.conv2.weight torch.Size([256, 256, 3, 3])
+layer3.0.bn2.weight torch.Size([256])
+layer3.0.bn2.bias torch.Size([256])
+layer3.0.shortcut.0.weight torch.Size([256, 128, 1, 1])
+layer3.0.shortcut.1.weight torch.Size([256])
+layer3.0.shortcut.1.bias torch.Size([256])
+layer3.1.conv1.weight torch.Size([256, 256, 3, 3])
+layer3.1.bn1.weight torch.Size([256])
+layer3.1.bn1.bias torch.Size([256])
+layer3.1.conv2.weight torch.Size([256, 256, 3, 3])
+layer3.1.bn2.weight torch.Size([256])
+layer3.1.bn2.bias torch.Size([256])
+layer4.0.conv1.weight torch.Size([512, 256, 3, 3])
+layer4.0.bn1.weight torch.Size([512])
+layer4.0.bn1.bias torch.Size([512])
+layer4.0.conv2.weight torch.Size([512, 512, 3, 3])
+layer4.0.bn2.weight torch.Size([512])
+layer4.0.bn2.bias torch.Size([512])
+layer4.0.shortcut.0.weight torch.Size([512, 256, 1, 1])
+layer4.0.shortcut.1.weight torch.Size([512])
+layer4.0.shortcut.1.bias torch.Size([512])
+layer4.1.conv1.weight torch.Size([512, 512, 3, 3])
+layer4.1.bn1.weight torch.Size([512])
+layer4.1.bn1.bias torch.Size([512])
+layer4.1.conv2.weight torch.Size([512, 512, 3, 3])
+layer4.1.bn2.weight torch.Size([512])
+layer4.1.bn2.bias torch.Size([512])
+fc.weight torch.Size([10, 512])
+fc.bias torch.Size([10])
+accuracy: 95.15999603271484                                                                      
+macs: 556037632
+sparsity: 0.908813275004873
+model size:3.89MB
+Precision: 0.9517, Recall: 0.9516, F1: 0.9516
+[[949   2  14   6   3   1   1   2  19   3]
+ [  3 983   0   0   0   0   0   0   2  12]
+ [ 12   0 939  14  12   9  10   3   1   0]
+ [  5   0   7 885   9  69  12   5   6   2]
+ [  3   0   4   8 969   8   3   5   0   0]
+ [  2   0   7  53  11 920   2   5   0   0]
+ [  3   0   3  16   1   1 975   1   0   0]
+ [  2   0   3   7  15   6   0 966   1   0]
+ [ 14   7   1   1   2   1   0   0 968   6]
+ [  3  22   0   3   0   1   0   0   9 962]]
+CPU latency: 0.01344099521636963
+GPU latency: 0.0017157220840454102
+
+CP:
+conv1.weight torch.Size([45, 3, 3, 3])
+bn1.weight torch.Size([45])
+bn1.bias torch.Size([45])
+layer1.0.conv1.weight torch.Size([45, 45, 3, 3])
+layer1.0.bn1.weight torch.Size([45])
+layer1.0.bn1.bias torch.Size([45])
+layer1.0.conv2.weight torch.Size([45, 45, 3, 3])
+layer1.0.bn2.weight torch.Size([45])
+layer1.0.bn2.bias torch.Size([45])
+layer1.1.conv1.weight torch.Size([51, 45, 3, 3])
+layer1.1.bn1.weight torch.Size([51])
+layer1.1.bn1.bias torch.Size([51])
+layer1.1.conv2.weight torch.Size([51, 51, 3, 3])
+layer1.1.bn2.weight torch.Size([51])
+layer1.1.bn2.bias torch.Size([51])
+layer2.0.conv1.weight torch.Size([90, 51, 3, 3])
+layer2.0.bn1.weight torch.Size([90])
+layer2.0.bn1.bias torch.Size([90])
+layer2.0.conv2.weight torch.Size([90, 90, 3, 3])
+layer2.0.bn2.weight torch.Size([90])
+layer2.0.bn2.bias torch.Size([90])
+layer2.0.shortcut.0.weight torch.Size([90, 51, 1, 1])
+layer2.0.shortcut.1.weight torch.Size([90])
+layer2.0.shortcut.1.bias torch.Size([90])
+layer2.1.conv1.weight torch.Size([90, 90, 3, 3])
+layer2.1.bn1.weight torch.Size([90])
+layer2.1.bn1.bias torch.Size([90])
+layer2.1.conv2.weight torch.Size([90, 90, 3, 3])
+layer2.1.bn2.weight torch.Size([90])
+layer2.1.bn2.bias torch.Size([90])
+layer3.0.conv1.weight torch.Size([154, 90, 3, 3])
+layer3.0.bn1.weight torch.Size([154])
+layer3.0.bn1.bias torch.Size([154])
+layer3.0.conv2.weight torch.Size([154, 154, 3, 3])
+layer3.0.bn2.weight torch.Size([154])
+layer3.0.bn2.bias torch.Size([154])
+layer3.0.shortcut.0.weight torch.Size([154, 90, 1, 1])
+layer3.0.shortcut.1.weight torch.Size([154])
+layer3.0.shortcut.1.bias torch.Size([154])
+layer3.1.conv1.weight torch.Size([179, 154, 3, 3])
+layer3.1.bn1.weight torch.Size([179])
+layer3.1.bn1.bias torch.Size([179])
+layer3.1.conv2.weight torch.Size([179, 179, 3, 3])
+layer3.1.bn2.weight torch.Size([179])
+layer3.1.bn2.bias torch.Size([179])
+layer4.0.conv1.weight torch.Size([154, 179, 3, 3])
+layer4.0.bn1.weight torch.Size([154])
+layer4.0.bn1.bias torch.Size([154])
+layer4.0.conv2.weight torch.Size([154, 154, 3, 3])
+layer4.0.bn2.weight torch.Size([154])
+layer4.0.bn2.bias torch.Size([154])
+layer4.0.shortcut.0.weight torch.Size([154, 179, 1, 1])
+layer4.0.shortcut.1.weight torch.Size([154])
+layer4.0.shortcut.1.bias torch.Size([154])
+layer4.1.conv1.weight torch.Size([102, 154, 3, 3])
+layer4.1.bn1.weight torch.Size([102])
+layer4.1.bn1.bias torch.Size([102])
+layer4.1.conv2.weight torch.Size([102, 102, 3, 3])
+layer4.1.bn2.weight torch.Size([102])
+layer4.1.bn2.bias torch.Size([102])
+fc.weight torch.Size([10, 102])
+fc.bias torch.Size([10])
+accuracy: 94.2699966430664                                                                       
+macs: 220300482
+sparsity: 0.0
+model size:7.49MB
+Precision: 0.9431, Recall: 0.9427, F1: 0.9427
+[[958   0  14   3   1   0   2   1  17   4]
+ [  2 985   0   0   0   0   0   0   2  11]
+ [ 22   0 923  14   8  10  18   3   1   1]
+ [ 10   1  19 897   9  42   9   7   5   1]
+ [  4   0   7  10 950  14   5  10   0   0]
+ [  5   0  10  73  12 887   5   7   0   1]
+ [  7   0  12  13   3   1 962   1   1   0]
+ [  6   0   4  12   6  10   0 962   0   0]
+ [ 17   7   2   4   2   0   0   0 962   6]
+ [ 10  38   0   5   0   0   0   0   6 941]]
+CPU latency: 0.00749943733215332
+GPU latency: 0.0019246077537536622
