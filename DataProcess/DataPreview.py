@@ -1,38 +1,36 @@
-from matplotlib import pyplot as plt
 from torch.optim import *
 from torch.optim.lr_scheduler import *
 from torchvision.datasets import *
 from torchvision.transforms import *
+from DataPreprocessing import  get_dataloaders, get_datasets
+import torch
+import numpy as np
 
-from DataPreprocessing import  get_datasets
+img_path, mask_path = "dataset/brats2d/images", "dataset/brats2d/masks"
 
-path='./dataset/cifar10'
-out_path='./output'
-train_dataloader,test_datasets=get_datasets(path)
 
-samples = [[] for _ in range(10)]
-for image, label in test_datasets:
-  print(label)
-  if len(samples[label]) < 4:
-    samples[label].append(image)
-
-plt.figure(figsize=(20, 9))
-for index in range(40):
-  label = index % 10
-  image = samples[label][index // 10]
-
-  # Convert from CHW to HWC for visualization
-  image = image.permute(1, 2, 0)
-
-  # Convert from class index to class name
-  label = test_datasets.classes[label]
 
   # Visualize the image
-  plt.subplot(4, 10, index + 1)
-  plt.imshow(image)
-  plt.title(label)
-  plt.axis("off")
-plt.show()
-plt.savefig(out_path+'/sample.png')
+def inspect_batch(batch_images, batch_masks, name="batch"):
+    # batch_images: (B,C,H,W), batch_masks: (B,...) 
+    B = batch_images.shape[0]
+    print(f"{name}: images {tuple(batch_images.shape)}, masks {tuple(batch_masks.shape)}")
+    for i in range(min(4, B)):
+        img = batch_images[i]
+        m = batch_masks[i]  
+        # shape
+        print(f" sample {i}: img_shape={tuple(img.shape)}, mask_shape={tuple(m.shape)}")
+        # mask stats
+        m_np = m.detach().cpu().numpy()
+        unique = np.unique(m_np)
+        print(f"   unique mask labels: {unique}")
 
-print("End")
+        if m_np.dtype != np.uint8:
+            print(f"   mask dtype:{m_np.dtype}, min/max: {m_np.min()}/{m_np.max()}")
+
+
+train_dataloader=get_dataloaders(img_path, mask_path, batch_size=8)[0]
+img,mask=next(iter(train_dataloader))
+inspect_batch(img,mask, name="Train Batch")
+
+
