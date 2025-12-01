@@ -19,8 +19,8 @@ print("Device:",device)
 
 seed=0
 random.seed(seed)
-basedir='PruningNAS'
-
+basedir='SegmentationPrune'
+select_model='Unet'
 img_path, mask_path = "dataset/brats2d/images", "dataset/brats2d/masks"
 train_dataloader,test_dataloader=get_dataloaders(img_path, mask_path, batch_size=64)
 
@@ -58,7 +58,7 @@ print(f"Best model accuray:", metric)
 plot_accuracy(dices)
 plot_loss(train_losses,test_losses)
 
-# torch.save(model, f'{basedir}/checkpoint/{select_model}/{select_model}_cifar_{metric}.pth')
-# torch.save(model.state_dict(), f'{basedir}/checkpoint/{select_model}/{select_model}_cifar_{metric:0.2f}_state_dict.pth')
+torch.save(model, f'{basedir}/checkpoint/{select_model}_cifar_{metric}.pth')
+torch.save(model.state_dict(), f'{basedir}/checkpoint/{select_model}_cifar_{metric:0.2f}_state_dict.pth')
 
     
