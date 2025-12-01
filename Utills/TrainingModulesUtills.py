@@ -1,154 +1,183 @@
 import torch
 from torch import nn
-from torch.optim import *
-from torch.optim.lr_scheduler import *
+from torch.optim import Optimizer
 from torch.utils.data import DataLoader
-from torchvision.datasets import *
-from torchvision.transforms import *
 from tqdm.auto import tqdm
 import copy
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
+# ----- metrics & helpers -----
+def dice_coeff_batch(probs: torch.Tensor, targets: torch.Tensor, eps: float = 1e-7) -> torch.Tensor:
+    """
+    probs: (B,1,H,W) floating probabilities in [0,1]
+    targets: (B,1,H,W) binary {0,1} floats
+    returns mean dice over batch (scalar tensor)
+    """
+    probs_flat = probs.view(probs.size(0), -1)
+    targets_flat = targets.view(targets.size(0), -1)
+    inter = (probs_flat * targets_flat).sum(dim=1)
+    union = probs_flat.sum(dim=1) + targets_flat.sum(dim=1)
+    dice = (2.0 * inter + eps) / (union + eps)
+    return dice.mean()
+
+
+def binarize_logits(logits: torch.Tensor, thr: float = 0.5) -> torch.Tensor:
+    """Logits -> binary mask (B,1,H,W) as float 0/1"""
+    probs = torch.sigmoid(logits)
+    return (probs >= thr).float(), probs
+
+
+# ----- train step (binary segmentation) -----
 def train(
-  model: nn.Module,
-  dataloader: DataLoader,
-  criterion: nn.Module,
-  optimizer: Optimizer,
-  epoch=0,
-  callbacks = None
-) -> float:
-  model.train()
-  total_loss = 0
-  for inputs, targets in tqdm(dataloader, desc=f'train epoch:{epoch}', leave=False):
-    # Move the data from CPU to GPU
-    inputs = inputs.to(device)
-    targets = targets.to(device)
+    model: nn.Module,
+    dataloader: DataLoader,
+    criterion: nn.Module,
+    optimizer: Optimizer,
+    epoch: int = 0,
+    callbacks=None,
+    device=device
+) -> tuple:
+    """
+    Returns (avg_loss, avg_dice)
+    """
+    model.train()
+    total_loss = 0.0
+    total_dice = 0.0
+    n = 0
 
-    # Reset the gradients (from the last iteration)
-    optimizer.zero_grad()
+    for inputs, targets in tqdm(dataloader, desc=f'train epoch:{epoch}', leave=False):
+        # inputs: (B,C,H,W), targets: either (B,1,H,W) float for BCE or (B,H,W) long for CE
+        inputs = inputs.to(device, dtype=torch.float32)
+        targets = targets.to(device)
 
-    # Forward inference
-    outputs = model(inputs)
+        # prepare targets for BCE: ensure float (B,1,H,W)
+        if targets.dim() == 3:
+            targets = targets.unsqueeze(1)  # (B,1,H,W)
+        # If criterion is BCEWithLogitsLoss, targets must be float
+        if isinstance(criterion, nn.BCEWithLogitsLoss) or hasattr(criterion, 'bce'):
+            targets = targets.float()
 
-    loss = criterion(outputs, targets)
-    total_loss += loss.item()
+        optimizer.zero_grad()
+        logits = model(inputs)                       # (B,1,H,W)
+        loss = criterion(logits, targets)
+        loss.backward()
+        optimizer.step()
+
+        # callbacks (pruning mask application etc.) — call after optimizer.step so mask persists
+        if callbacks is not None:
+            for cb in callbacks:
+                cb()
+
+        # metrics
+        with torch.no_grad():
+            probs = torch.sigmoid(logits)
+            dice = dice_coeff_batch(probs, targets.float())
+        batch_size = inputs.size(0)
+        total_loss += loss.item() * batch_size
+        total_dice += dice.item() * batch_size
+        n += batch_size
+
+    avg_loss = total_loss / n
+    avg_dice = total_dice / n
+    return avg_loss, avg_dice
 
 
-    # Backward propagation
-    loss.backward()
-    # Update optimizer and LR scheduler
-    optimizer.step()
-
-    if callbacks is not None:
-        for callback in callbacks:
-            callback()
-
-  return total_loss/len(dataloader)
-
-
-
-def predict(model , input):
-    # model.to(device)
-    # input_tensor = input_tensor.to(device)
-
-    # Make prediction
+# ----- prediction helper (single image) -----
+def predict(model: nn.Module, input_tensor: torch.Tensor, thr: float = 0.5, device=device):
+    """
+    input_tensor: (C,H,W) or (1,H,W) torch tensor on CPU.
+    Returns binary mask (H,W) numpy uint8 and probability map (H,W) float32
+    """
+    model.to(device)
+    model.eval()
+    if input_tensor.dim() == 3:
+        inp = input_tensor.unsqueeze(0).to(device).float()  # (1,C,H,W)
+    else:
+        raise ValueError("input_tensor must be (C,H,W)")
     with torch.no_grad():
-        print(input.to(device).unsqueeze(0).shape)
-        output = model(input.unsqueeze(0))
+        logits = model(inp)               # (1,1,H,W)
+        probs = torch.sigmoid(logits)
+        pred_bin = (probs >= thr).squeeze(0).squeeze(0).cpu().numpy().astype('uint8')
+        prob_map = probs.squeeze(0).squeeze(0).cpu().numpy().astype('float32')
+    return pred_bin, prob_map
 
-    # Get predicted class
-    predicted_class = torch.argmax(output, dim=1).item()
-    return predicted_class
 
-
+# ----- evaluation (binary segmentation) -----
 @torch.inference_mode()
-def evaluate(
-  model: nn.Module,
-  dataloader: DataLoader,
-  criterion =None,
-  verbose=True,
-) :
-  model.eval()
-  total_loss = float(0)
-  num_samples = 0
-  num_correct = 0
+def evaluate(model: nn.Module, dataloader: DataLoader, criterion=None, device=device, verbose=True):
+    model.eval()
+    total_loss = 0.0
+    total_dice = 0.0
+    n = 0
 
-  for inputs, targets in tqdm(dataloader, desc="eval", leave=False,
-                              disable=not verbose):
-    # Move the data from CPU to GPU
-    inputs = inputs.to(device)
-    targets = targets.to(device)
+    for inputs, targets in tqdm(dataloader, desc="eval", leave=False, disable=not verbose):
+        inputs = inputs.to(device, dtype=torch.float32)
+        if targets.dim() == 3:
+            targets = targets.unsqueeze(1)
+        targets = targets.to(device)
+        if criterion is not None and isinstance(criterion, nn.BCEWithLogitsLoss):
+            targets = targets.float()
 
-    # Inference
-    outputs1 = model(inputs)
+        logits = model(inputs)
+        if criterion is not None:
+            loss = criterion(logits, targets)
+            total_loss += loss.item() * inputs.size(0)
 
-    # Convert logits to class indices
-    outputs = outputs1.argmax(dim=1)
+        probs = torch.sigmoid(logits)
+        dice = dice_coeff_batch(probs, targets.float())
+        total_dice += dice.item() * inputs.size(0)
+        n += inputs.size(0)
 
-    # Calculate loss
-    if criterion is not None:
-      loss = criterion(outputs1, targets)
-      total_loss += loss.item()
+    avg_dice = total_dice / n if n > 0 else 0.0
+    avg_loss = total_loss / n if (criterion is not None and n > 0) else 0.0
+    return avg_dice, avg_loss
 
 
-    # Update metrics
-    num_samples += targets.size(0)
-    num_correct += (outputs == targets).sum()
+# ----- high-level Training loop (binary) -----
+def Training(model, train_dataloader, test_dataloader, criterion, optimizer, num_epochs=10, scheduler=None):
+    losses, val_losses, dices = [], [], []
+    best_dice = -1.0
+    best_model = None
 
-  return (num_correct / num_samples * 100).item(), total_loss/len(dataloader)
-
-  
-
-def Training( model, train_dataloader, test_dataloader, criterion, optimizer, num_epochs=10,scheduler=None):
-    losses,test_losses,accs=[],[],[]
-    best_acc=0
-    best_model=None
-    for epoch_num in tqdm(range(1, num_epochs + 1)):
-        loss=train(model, train_dataloader, criterion, optimizer, epoch=epoch_num)
-        acc, val_loss = evaluate(model, test_dataloader, criterion)
-        print(f"Training Loss: {loss:.6f} ,Test Loss: {val_loss:.4f}, Test Accuracy {acc:.4f}")
-        if scheduler:
-            print(f"LR:{scheduler.get_last_lr()} ")
-        if acc>best_acc:
-            best_acc=acc
-            best_model=copy.deepcopy(model)
-        losses.append(loss)
-        test_losses.append(val_loss)
-        accs.append(acc)
+    model.to(device)
+    for epoch in range(1, num_epochs + 1):
+        train_loss, train_dice = train(model, train_dataloader, criterion, optimizer, epoch=epoch)
+        val_dice, val_loss = evaluate(model, test_dataloader, criterion)
+        print(f"Epoch {epoch}: Train loss {train_loss:.4f}, Train Dice {train_dice:.4f} | Val loss {val_loss:.4f}, Val Dice {val_dice:.4f}")
         if scheduler is not None:
             scheduler.step()
-    return best_model, losses, test_losses, accs
+
+        if val_dice > best_dice:
+            best_dice = val_dice
+            best_model = copy.deepcopy(model)
+
+        losses.append(train_loss)
+        val_losses.append(val_loss)
+        dices.append(val_dice)
+
+    return best_model, losses, val_losses, dices
 
 
-def TrainingPrunned(pruned_model,train_dataloader,test_dataloader,criterion, optimizer, pruner,scheduler=None,num_finetune_epochs=5,isCallback=True):
-    accuracies=[]
-    train_losses=[]
-    test_losses=[]
-    if scheduler:
-       scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, num_finetune_epochs)
-    best_accuracy = 0
-    best_model=None
-    print(f'Finetuning Fine-grained Pruned Sparse Model')
+# ----- fine-tuning pruned model -----
+def TrainingPrunned(pruned_model, train_dataloader, test_dataloader, criterion, optimizer, pruner,
+                    scheduler=None, num_finetune_epochs=5, isCallback=True):
+    best_accuracy = 0.0
+    best_model = None
+    pruned_model.to(device)
+
     for epoch in range(num_finetune_epochs):
-        # At the end of each train iteration, we have to apply the pruning mask
-        #    to keep the model sparse during the training
-        if isCallback:
-           callbacks=[lambda: pruner.apply(pruned_model)]
-        else:
-           callbacks=None
-        train_loss=train(pruned_model, train_dataloader, criterion, optimizer,epoch+1,callbacks=callbacks )
-        test_acc ,test_loss = evaluate(pruned_model, test_dataloader,criterion)
-        accuracies.append(test_acc)
-        train_losses.append(train_loss)
-        test_losses.append(test_loss)
-        is_best = test_acc > best_accuracy
-        if is_best:
-            best_accuracy = test_acc
-            best_model=copy.deepcopy(pruned_model)
-        print(f'    Epoch {epoch+1} Test accuracy:{test_acc:.2f}% / Best Accuracy: {best_accuracy:.2f}%, train loss: {train_loss:.4f}, test loss {test_loss:.4f}')
-        if scheduler is not None:
-          scheduler.step()
+        callbacks = [lambda: pruner.apply(pruned_model)] if isCallback else None
+        train_loss, train_dice = train(pruned_model, train_dataloader, criterion, optimizer, epoch=epoch + 1, callbacks=callbacks)
+        val_dice, val_loss = evaluate(pruned_model, test_dataloader, criterion)
+        print(f"Finetune Epoch {epoch+1}: Train Dice {train_dice:.4f}, Val Dice {val_dice:.4f}, Train loss {train_loss:.4f}, Val loss {val_loss:.4f}")
 
-    return best_accuracy, best_model, accuracies, train_losses,test_losses
+        if val_dice > best_accuracy:
+            best_accuracy = val_dice
+            best_model = copy.deepcopy(pruned_model)
+
+        if scheduler is not None:
+            scheduler.step()
+
+    return best_accuracy, best_model

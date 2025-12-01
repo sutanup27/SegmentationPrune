@@ -27,7 +27,6 @@ class BraTSSlicesDataset(Dataset):
         mask_path = os.path.join(self.masks_dir, fname)
 
         img = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE)   # (H,W)
-        print(np.shape(img))
         mask = cv2.imread(mask_path, cv2.IMREAD_UNCHANGED) # preserve label values
 
         if self.transforms:
