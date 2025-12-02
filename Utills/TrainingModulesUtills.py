@@ -136,7 +136,7 @@ def evaluate(model: nn.Module, dataloader: DataLoader, criterion=None, device=de
 
 
 # ----- high-level Training loop (binary) -----
-def Training(model, train_dataloader, test_dataloader, criterion, optimizer, num_epochs=10, scheduler=None):
+def Training(model, train_dataloader, test_dataloader, criterion, optimizer, num_epochs=10, scheduler=None,checkpoint_path=None):
     losses, val_losses, dices = [], [], []
     best_dice = -1.0
     best_model = None
@@ -152,6 +152,9 @@ def Training(model, train_dataloader, test_dataloader, criterion, optimizer, num
         if val_dice > best_dice:
             best_dice = val_dice
             best_model = copy.deepcopy(model)
+
+        if epoch%5==0 and checkpoint_path!=None:
+            torch.save(best_model,f"{checkpoint_path}/Unet_brayts_{epoch}_{best_dice}.pth")
 
         losses.append(train_loss)
         val_losses.append(val_loss)

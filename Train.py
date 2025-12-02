@@ -4,10 +4,8 @@ import random
 
 import torch
 from torch import nn
-from torch.optim import *
-from torch.optim.lr_scheduler import *
-from torchvision.datasets import *
-from torchvision.transforms import *
+from torch.optim import Adam
+from torch.optim.lr_scheduler import CosineAnnealingLR
 
 from SegmentationPrune.Models.Unet import UNet
 from .Utills.TrainingModulesUtills import evaluate
@@ -21,8 +19,9 @@ seed=0
 random.seed(seed)
 basedir='SegmentationPrune'
 select_model='Unet'
-img_path, mask_path = "dataset/brats2d/images", "dataset/brats2d/masks"
-train_dataloader,test_dataloader=get_dataloaders(img_path, mask_path, batch_size=64)
+img_path, mask_path = "brats2d/images", "brats2d/masks"
+checkpoint_path=f'{basedir}/checkpoint'
+train_dataloader,test_dataloader=get_dataloaders(img_path, mask_path, batch_size=32)
 
 
 model=UNet(in_channels=1, out_channels=1)
@@ -37,7 +36,7 @@ model = model.to(device)
 criterion = nn.BCEWithLogitsLoss()
 optimizer = Adam(model.parameters(), lr=1e-4)
 
-num_epochs=200
+num_epochs=20
 scheduler = CosineAnnealingLR(optimizer, num_epochs)
 # scheduler = CosineAnnealingLR(optimizer, T_max=50)
 
@@ -48,7 +47,8 @@ best_model, train_losses, test_losses, dices = Training(
     criterion=criterion,
     optimizer=optimizer,
     num_epochs=20,        # choose epochs
-    scheduler=None
+    scheduler=scheduler,
+    checkpoint_path=checkpoint_path
 )
 
 model=copy.deepcopy(best_model)
